@@ -1,0 +1,82 @@
+name: Lumen IPTV
+on:
+  push:
+    branches: [main, 'lumen/**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lumen-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Test all three modules
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:testStandardDebugUnitTest :owntv-core:core:testDebugUnitTest :owntv-core:player-core:testDebugUnitTest --stacktrace
+      - name: Android lint
+        run: ./gradlew :app:lintStandardDebug --stacktrace
+      - name: Build installable ARM APK
+        run: ./gradlew :app:assembleStandardDebug --stacktrace
+      - name: Build emulator test APKs
+        run: ./gradlew :app:assembleX86_64Debug :app:assembleX86_64DebugAndroidTest --stacktrace
+      - name: Upload APKs and corresponding source
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/standard/debug/*.apk dist/Lumen-IPTV-arm-debug.apk
+          git archive --format=zip --output=dist/Lumen-IPTV-source.zip HEAD
+          cd dist && sha256sum *.apk *.zip > SHA256SUMS
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Lumen-IPTV-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: verification-reports
+          path: |
+            app/build/reports/
+            owntv-core/core/build/reports/
+            owntv-core/player-core/build/reports/
+  # Network samples are intentionally opt-in: CDN outages must not mask a build verdict.
+  playback:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: chmod +x gradlew && ./gradlew :app:connectedX86_64DebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=tv.own.owntv.LumenPlaybackSmokeTest --stacktrace
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: playback-reports
+          path: app/build/reports/androidTests/

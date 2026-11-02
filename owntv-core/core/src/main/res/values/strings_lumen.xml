@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lumen_display_refresh">Display refresh</string>
+    <string name="lumen_network_rate">Network throughput</string>
+    <string name="lumen_playback_error">Playback error</string>
+    <string name="lumen_refresh_hz">%1$.2f Hz</string>
+    <string name="lumen_dolby_vision" translatable="false">Dolby Vision</string>
+    <string name="lumen_bitrate_declared">%1$s Mbps (declared)</string>
+    <string name="lumen_bitrate_estimated">%1$s Mbps (estimated)</string>
+    <string name="lumen_bitrate_network">%1$s Mbps (network)</string>
+</resources>

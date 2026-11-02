@@ -40,8 +40,20 @@ fun StreamInfoOverlay(player: PlaybackEngine, modifier: Modifier = Modifier) {
     var rows by remember { mutableStateOf(emptyList<StreamInfoRow>()) }
     // Re-read on the player's shared cosmetic beat rather than a timer of its own, so having the overlay
     // up alongside the position readout costs one wake-up rather than two (see [PlayerHeartbeat]).
-    LaunchedEffect(player) {
-        PlayerHeartbeat.beat.collect { rows = player.streamInfo() }
+    val view = androidx.compose.ui.platform.LocalView.current
+    LaunchedEffect(player, view) {
+        PlayerHeartbeat.beat.collect {
+            rows = buildList {
+                addAll(player.streamInfo())
+                view.display?.refreshRate?.takeIf { it.isFinite() && it > 0 }?.let {
+                    add(StreamInfoRow(StreamInfoLabel.DISPLAY, StreamInfoValue.Display(it)))
+                }
+                // Structured reason only: raw provider errors can contain credentials or stream URLs.
+                player.errorInfo.value?.reason?.let {
+                    add(StreamInfoRow(StreamInfoLabel.ERROR, StreamInfoValue.Raw(it.toString())))
+                }
+            }
+        }
     }
     if (rows.isEmpty()) return
     val res = LocalResources.current

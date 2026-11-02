@@ -106,10 +106,14 @@ private val PixelPower = Color(CorePixelMark.POWER)
  */
 @Composable
 fun Wordmark(width: Dp, modifier: Modifier = Modifier, tv: Color = stageAccent.accent, own: Color = WordmarkCream) {
-    Box(modifier.width(width).height(width * 182f / 988f)) {
-        Image(painterResource(R.drawable.owntv_wordmark_own), null, Modifier.fillMaxSize(), colorFilter = ColorFilter.tint(own))
-        Image(painterResource(R.drawable.owntv_wordmark_tv), null, Modifier.fillMaxSize(), colorFilter = ColorFilter.tint(tv))
-    }
+    androidx.tv.material3.Text(
+        text = androidx.compose.ui.res.stringResource(R.string.app_name),
+        modifier = modifier.width(width),
+        color = own,
+        fontSize = androidx.compose.ui.unit.TextUnit(width.value / 7f, androidx.compose.ui.unit.TextUnitType.Sp),
+        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+        maxLines = 1,
+    )
 }
 
 val WordmarkCream = Color(0xFFFFF6EE)

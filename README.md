@@ -1,3 +1,9 @@
+# Lumen IPTV
+
+Independent GPLv3 OwnTV fork. See [Lumen installation and build guide](LUMEN.md) and [actual test results and limitations](VERIFICATION.md). The tested Lumen source is on the `lumen/main` branch. The upstream README is retained below for attribution and background.
+
+---
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="extras/brand/app-logos/logo_eggshell_light.png">
